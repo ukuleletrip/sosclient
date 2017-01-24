@@ -209,6 +209,8 @@ def exec_command(cmd, sosapi):
         list_sensors(args[1:], sosapi)
     elif args[0] == 'measurements' or args[0] == 'measures':
         get_measurements(args[1:], sosapi)
+    else:
+        print_help()
     return True
 
 def main():
