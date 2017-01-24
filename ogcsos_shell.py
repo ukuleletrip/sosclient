@@ -135,6 +135,7 @@ def get_measurements(args, sosapi):
     parser.add_argument('-s', help='start datetime')
     parser.add_argument('-e', help='end datetime')
     parser.add_argument('-n', help='node name or number', required=True)
+    parser.add_argument('-r', action='store_true', help='use GetResult')
     #parser.add_argument('--header', action='store_true', help='with header')
     parser.add_argument('sensors', nargs='+', help='sensors to get')
     try:
@@ -173,7 +174,10 @@ def get_measurements(args, sosapi):
             return
         properties.append(prop)
 
-    measurements = sosapi.get_observation(the_node, properties, [s_dt, e_dt])
+    if opts.r:
+        measurements = sosapi.get_result(the_node, properties, [s_dt, e_dt])
+    else:
+        measurements = sosapi.get_observation(the_node, properties, [s_dt, e_dt])
 
     print 'time,%s' % (','.join(properties))
     for dt, measure in sorted(measurements.items()):
@@ -205,9 +209,6 @@ def exec_command(cmd, sosapi):
         list_sensors(args[1:], sosapi)
     elif args[0] == 'measurements' or args[0] == 'measures':
         get_measurements(args[1:], sosapi)
-    else:
-        print_help()
-        
     return True
 
 def main():

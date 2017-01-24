@@ -11,13 +11,13 @@ import HTMLParser
 import urllib2
 import copy
 import StringIO
-from datetime import datetime, timedelta
+from datetime import datetime
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement, tostring, fromstring
 
 ISO8601_FMT = '%Y-%m-%dT%H:%M:%S+0900'
 
-# if you want to know why this is needed, please read 
+# if you want to know why this is needed, please read
 #   http://effbot.org/zone/element-namespaces.htm
 def get_namespaces(xmlfile):
     events = "start", "start-ns"
@@ -76,7 +76,8 @@ class SOSAPI(object):
 
     @staticmethod
     def default_ogc_namespaces():
-        # see Table12 in p.8 of "OGC Sensor Observation Service Interface Standard" Version 2.0
+        # see Table12 in p.8 of
+        # "OGC Sensor Observation Service Interface Standard" Version 2.0
         ns = {
             'xmlns:fes' : 'http://www.opengis.net/fes/2.0',
             'xmlns:gml' : 'http://www.opengis.net/gml/3.2',
@@ -153,11 +154,11 @@ class SOSAPI(object):
                 dict(value=float(result.text),
                      uom=HTMLParser.HTMLParser().unescape(result.attrib['uom'])))
 
-    def build_get_observation_request(self, offering, properties, time_range):
+    def build_get_data_request(self, offering, properties, time_range, operation):
         attrib = copy.deepcopy(self.ns)
         attrib['service'] = 'SOS'
         attrib['version'] = '2.0.0'
-        root = Element('sos:GetObservation', attrib)
+        root = Element('sos:%s' % (operation), attrib)
         SubElement(root, 'sos:offering').text = offering.procedure
 
         for prop in properties:
@@ -166,10 +167,16 @@ class SOSAPI(object):
         temporal_filter = SubElement(root, 'sos:temporalFilter')
         during = SubElement(temporal_filter, 'fes:During')
         SubElement(during, 'fes:ValueReference').text = 'phenomenonTime'
-        time_period = SubElement(during, 'gml:TimePeriod', { 'gml:id' : 't1' })
+        time_period = SubElement(during, 'gml:TimePeriod', {'gml:id' : 't1'})
         SubElement(time_period, 'gml:beginPosition').text = time_range[0].strftime(ISO8601_FMT)
         SubElement(time_period, 'gml:endPosition').text = time_range[1].strftime(ISO8601_FMT)
         return root
+
+    def build_get_observation_request(self, offering, properties, time_range):
+        return self.build_get_data_request(offering, properties, time_range, 'GetObservation')
+
+    def build_get_result_request(self, offering, properties, time_range):
+        return self.build_get_data_request(offering, properties, time_range, 'GetResult')
 
     def build_get_capabitilies_request(self):
         attrib = copy.deepcopy(self.ns)
@@ -181,11 +188,11 @@ class SOSAPI(object):
         ows_accept_version = SubElement(root, 'ows:AcceptVersion')
         SubElement(ows_accept_version, 'ows:Version').text = '2.0.0'
         ows_sections = SubElement(root, 'ows:Sections')
-        sections = [ 'OperationsMetadata',
-                     'ServiceIdentification',
-                     'ServiceProvider',
-                     'Filter_Capabilities',
-                     'Contents' ]
+        sections = ['OperationsMetadata',
+                    'ServiceIdentification',
+                    'ServiceProvider',
+                    'Filter_Capabilities',
+                    'Contents']
         for section in sections:
             SubElement(ows_sections, 'ows:Section').text = section
 
@@ -194,7 +201,7 @@ class SOSAPI(object):
     def call_ogc_api(self, req_body):
         req = urllib2.Request('%s?Key=%s' % (self.endpoint, self.token),
                               req_body.encode('utf-8'),
-                              { 'content-type' : 'application/xml; charset="utf-8"' })
+                              {'content-type' : 'application/xml; charset="utf-8"'})
         resp = urllib2.urlopen(req)
         resp_body = resp.read()
         namespaces = get_namespaces(StringIO.StringIO(resp_body))
@@ -234,7 +241,34 @@ class SOSAPI(object):
             if dt not in measurements:
                 measurements[dt] = {}
             measurements[dt][prop] = value
-                              
+
+        return measurements
+
+    def get_result(self, offering, properties, time_range):
+        req = self.build_get_result_request(offering, properties, time_range)
+        (resp_root, namespaces) = self.call_ogc_api(tostring(req, 'utf-8'))
+        results = resp_root.find(get_cn_tag('sos:resultValues',
+                                            namespaces)).text.strip().split('\n')
+
+        measurements = {}
+        prop_idx = 0
+        prev_dt = None
+        for l in results:
+            elem = l.split(',')
+            if len(elem) == 2:
+                dt = datetime.strptime(elem[0], ISO8601_FMT)
+                value = {'value' : float(elem[1]), 'uom' : ''}
+
+                if prev_dt and dt < prev_dt:
+                    # next prop
+                    prop_idx += 1
+
+                prop = properties[prop_idx]
+                if dt not in measurements:
+                    measurements[dt] = {}
+                measurements[dt][prop] = value
+                prev_dt = dt
+                    
         return measurements
 
     def update_observation_capabilities(self):
