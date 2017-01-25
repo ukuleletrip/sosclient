@@ -280,7 +280,7 @@ class SOSServer(object):
                     
         return measurements
 
-    def update_observation_capabilities(self):
+    def update_capabilities(self):
         self.get_capabilities()
 
 

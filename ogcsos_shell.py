@@ -224,7 +224,7 @@ def main():
     
     opts = parse_args()
     sosserver = SOSServer(opts.endpoint, opts.token)
-    sosserver.update_observation_capabilities()
+    sosserver.update_capabilities()
 
     print 'Welcome to %s by %s !' % (sosserver.server.name, sosserver.provider.name)
 
