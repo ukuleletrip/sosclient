@@ -36,31 +36,34 @@ def print_help():
     help                           : print this help
 '''
 
-def list_nodes(args, sosapi):
+def list_nodes(args, sosserver):
     parser = AP(prog='nodes')
     parser.add_argument('-l', action='store_true')
     try:
         opts = parser.parse_args(args)
     except:
         return 
-    for i, node in enumerate(sosapi.observations):
+    for i, node in enumerate(sosserver.observations):
         if opts.l:
             print '%2d: %s : %s' % (i+1, node.name, node.description)
         else:
             print '%2d: %s' % (i+1, node.name)
 
-def show_server(sosapi):
-    print '%s: ' % (sosapi.server.name)
-    print ' service type   : %s' % (sosapi.server.service_type)
-    print ' service version: %s' % (sosapi.server.service_version)
-    print ' service fees   : %s' % (sosapi.server.fees)
+def show_server(sosserver):
+    print '%s: ' % (sosserver.server.name)
+    print ' service type     : %s' % (sosserver.server.service_type)
+    print ' service version  : %s' % (sosserver.server.service_version)
+    print ' service fees     : %s' % (sosserver.server.fees)
+    print ' served operations:'
+    print '       %s' % (','.join(sosserver.operations))
 
-def show_provider(sosapi):
-    print '%s: ' % (sosapi.provider.name)
-    print ' administrator  : %s' % (sosapi.provider.indiviual_name)
+def show_provider(sosserver):
+    print '%s: ' % (sosserver.provider.name)
+    print ' administrator  : %s' % (sosserver.provider.indiviual_name)
     print ' address:'
-    print '    %s' % (sosapi.provider.point)
-    print '    %s, %s, %s' % (sosapi.provider.city, sosapi.provider.pref, sosapi.provider.country)
+    print '    %s' % (sosserver.provider.point)
+    print '    %s, %s, %s' % (sosserver.provider.city, 
+                              sosserver.provider.pref, sosserver.provider.country)
 
 def get_node_from_name_or_number(ind, nodes):
     the_node = None
@@ -92,7 +95,7 @@ def get_prop_from_name_or_number(ind, node):
                 break
     return the_prop
 
-def list_sensors(args, sosapi):
+def list_sensors(args, sosserver):
     parser = AP(prog='sensors')
     parser.add_argument('sensor', help='number or name of sensor')
     try:
@@ -100,7 +103,7 @@ def list_sensors(args, sosapi):
     except:
         return
     
-    the_node = get_node_from_name_or_number(opts.sensor, sosapi.observations)
+    the_node = get_node_from_name_or_number(opts.sensor, sosserver.observations)
     if the_node:
         for i, prop in enumerate(the_node.properties):
             print '%2d: %s' % (i+1, prop)
@@ -131,7 +134,7 @@ def parse_cmd_datetime(dtstr):
 
     raise ValueError
 
-def get_measurements(args, sosapi):
+def get_measurements(args, sosserver):
     parser = AP(prog='measurements')
     parser.add_argument('-s', help='start datetime')
     parser.add_argument('-e', help='end datetime')
@@ -158,7 +161,7 @@ def get_measurements(args, sosapi):
         print 'invalid datetime is specified. Please use format, 2016-10-26T00:00:00'
         return
 
-    the_node = get_node_from_name_or_number(opts.n, sosapi.observations)
+    the_node = get_node_from_name_or_number(opts.n, sosserver.observations)
     if not the_node:
         print 'No node was found !!'
         return
@@ -176,9 +179,9 @@ def get_measurements(args, sosapi):
         properties.append(prop)
 
     if opts.r:
-        measurements = sosapi.get_result(the_node, properties, [s_dt, e_dt])
+        measurements = sosserver.get_result(the_node, properties, [s_dt, e_dt])
     else:
-        measurements = sosapi.get_observation(the_node, properties, [s_dt, e_dt])
+        measurements = sosserver.get_observation(the_node, properties, [s_dt, e_dt])
 
     print 'time,%s' % (','.join(properties))
     for dt, measure in sorted(measurements.items()):
@@ -191,7 +194,7 @@ def get_measurements(args, sosapi):
                 line.append('')
         print ','.join(line)
 
-def exec_command(cmd, sosapi):
+def exec_command(cmd, sosserver):
     if len(cmd) == 0:
         return True
 
@@ -201,15 +204,15 @@ def exec_command(cmd, sosapi):
     elif args[0] == 'q' or args[0] == 'quit' or args[0] == 'exit':
         return False
     elif args[0] == 'server':
-        show_server(sosapi)
+        show_server(sosserver)
     elif args[0] == 'provider':
-        show_provider(sosapi)
+        show_provider(sosserver)
     elif args[0] == 'nodes':
-        list_nodes(args[1:], sosapi)
+        list_nodes(args[1:], sosserver)
     elif args[0] == 'sensors':
-        list_sensors(args[1:], sosapi)
+        list_sensors(args[1:], sosserver)
     elif args[0] == 'measurements' or args[0] == 'measures':
-        get_measurements(args[1:], sosapi)
+        get_measurements(args[1:], sosserver)
     else:
         print_help()
     return True
@@ -220,14 +223,14 @@ def main():
     print 'Simple Shell Interface for OGC SOS API by Satoru MIYAMOTO\n'
     
     opts = parse_args()
-    sosapi = SOSServer(opts.endpoint, opts.token)
-    sosapi.update_observation_capabilities()
+    sosserver = SOSServer(opts.endpoint, opts.token)
+    sosserver.update_observation_capabilities()
 
-    print 'Welcome to %s by %s !' % (sosapi.server.name, sosapi.provider.name)
+    print 'Welcome to %s by %s !' % (sosserver.server.name, sosserver.provider.name)
 
     while True:
         cmd = raw_input(prompt)
-        if not exec_command(cmd, sosapi):
+        if not exec_command(cmd, sosserver):
             break
 
 if __name__ == '__main__':

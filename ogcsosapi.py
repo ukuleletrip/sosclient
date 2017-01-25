@@ -154,6 +154,15 @@ class SOSServer(object):
                 dict(value=float(result.text),
                      uom=HTMLParser.HTMLParser().unescape(result.attrib['uom'])))
 
+    @staticmethod
+    def parse_operations(operations_root, namespaces):
+        oplist = operations_root.findall(get_cn_tag('ows:Operation', namespaces))
+        operations = []
+        for op in oplist:
+            operations.append(op.attrib['name'])
+
+        return operations
+
     def build_get_data_request(self, offering, properties, time_range, operation):
         attrib = copy.deepcopy(self.ns)
         attrib['service'] = 'SOS'
@@ -218,7 +227,7 @@ class SOSServer(object):
         self.provider = self.parse_provider(provider, namespaces)
 
         operations = resp_root.find(get_cn_tag('ows:OperationsMetadata', namespaces))
-        #self.operations = self.parse_operations(operations, namespaces)
+        self.operations = self.parse_operations(operations, namespaces)
 
         filters = resp_root.find(get_cn_tag('sos:filterCapabilities', namespaces))
         #self.filters = self.parse_filters(filters, namespaces)
