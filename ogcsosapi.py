@@ -63,11 +63,11 @@ class Measurement(object):
         self.__dict__.update(kwds)
 
 
-class SOSAPI(object):
+class SOSServer(object):
     def __init__(self, endpoint, token):
         self.endpoint = endpoint
         self.token = token
-        self.ns = SOSAPI.default_ogc_namespaces()
+        self.ns = SOSServer.default_ogc_namespaces()
         self.server = None
         self.provider = None
         self.operations = []

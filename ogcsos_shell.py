@@ -7,7 +7,7 @@
 #
 #
 import argparse
-from ogcsosapi import SOSAPI
+from ogcsosapi import SOSServer
 from datetime import datetime, timedelta
 
 # to prevent ArgumentParser to exit after printing help.
@@ -217,7 +217,7 @@ def main():
     print 'Simple Shell Interface for OGC SOS API by Satoru MIYAMOTO\n'
     
     opts = parse_args()
-    sosapi = SOSAPI(opts.endpoint, opts.token)
+    sosapi = SOSServer(opts.endpoint, opts.token)
     sosapi.update_observation_capabilities()
 
     print 'Welcome to %s by %s !' % (sosapi.server.name, sosapi.provider.name)
