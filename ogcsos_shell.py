@@ -7,6 +7,7 @@
 #
 #
 import argparse
+import os
 from ogcsosapi import SOSServer
 from datetime import datetime, timedelta
 
@@ -214,6 +215,8 @@ def exec_command(cmd, sosapi):
     return True
 
 def main():
+    prompt = '\nSOS: ' if os.name == 'nt' else '\n\033[1;32mSOS: \033[1;m'
+
     print 'Simple Shell Interface for OGC SOS API by Satoru MIYAMOTO\n'
     
     opts = parse_args()
@@ -223,7 +226,7 @@ def main():
     print 'Welcome to %s by %s !' % (sosapi.server.name, sosapi.provider.name)
 
     while True:
-        cmd = raw_input('\n\033[1;32mSOS: \033[1;m')
+        cmd = raw_input(prompt)
         if not exec_command(cmd, sosapi):
             break
 
