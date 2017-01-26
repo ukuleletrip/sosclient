@@ -129,6 +129,8 @@ def parse_cmd_datetime(dtstr):
                 # need to set date
                 now = datetime.now()
                 return dt.replace(year=now.year, month=now.month, day=now.day)
+            else:
+                return dt
         except ValueError:
             pass
 
