@@ -22,7 +22,9 @@ def parse_args():
     parser.add_argument("--token", required=True, help="your Token to use SOS API")
     parser.add_argument("--endpoint", help="endpoint of SOS Server",
                         default='https://cs.listenfield.com/OGCAPIV2.jsp')
-    #parser.add_argument("--remainfile", action="store_true", help="password for ftp server")
+    parser.add_argument('--command', help='command to execute')
+    parser.add_argument('--instant', action='store_true',
+                        help='prevent to call GetCapability, you must specify node or sensor by name.')
     args = parser.parse_args()
     return args
 
@@ -78,6 +80,9 @@ def get_node_from_name_or_number(ind, nodes):
             if node.name == ind:
                 the_node = node
                 break
+        else:
+            return ind
+                
     return the_node
 
 def get_prop_from_name_or_number(ind, node):
@@ -88,11 +93,13 @@ def get_prop_from_name_or_number(ind, node):
             the_prop = node.properties[int(ind)-1]
         except IndexError:
             pass
-    else:
+    elif node and type(node) != str:
         for prop in node.properties:
             if prop == ind:
                 the_prop = prop
                 break
+    else:
+        return ind
     return the_prop
 
 def list_sensors(args, sosserver):
@@ -220,16 +227,22 @@ def exec_command(cmd, sosserver):
     return True
 
 def main():
-    prompt = '\nSOS: ' if os.name == 'nt' else '\n\033[1;32mSOS: \033[1;m'
-
-    print 'Simple Shell Interface for OGC SOS API by Satoru MIYAMOTO\n'
-    
     opts = parse_args()
+
+    if not opts.command:
+        print 'Simple Shell Interface for OGC SOS API by Satoru MIYAMOTO\n'
+        
     sosserver = SOSServer(opts.endpoint, opts.token)
-    sosserver.update_capabilities()
+    if not opts.instant:
+        sosserver.update_capabilities()
+        if not opts.command:
+            print 'Welcome to %s by %s !' % (sosserver.server.name, sosserver.provider.name)
 
-    print 'Welcome to %s by %s !' % (sosserver.server.name, sosserver.provider.name)
+    if opts.command:
+        exec_command(opts.command, sosserver)
+        return
 
+    prompt = '\nSOS: ' if os.name == 'nt' else '\n\033[1;32mSOS: \033[1;m'
     while True:
         cmd = raw_input(prompt)
         if not exec_command(cmd, sosserver):

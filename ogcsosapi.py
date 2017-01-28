@@ -168,7 +168,8 @@ class SOSServer(object):
         attrib['service'] = 'SOS'
         attrib['version'] = '2.0.0'
         root = Element('sos:%s' % (operation), attrib)
-        SubElement(root, 'sos:offering').text = offering.procedure
+        procedure = offering if type(offering) == str else offering.procedure
+        SubElement(root, 'sos:offering').text = procedure
 
         for prop in properties:
             SubElement(root, 'sos:observedProperty').text = prop
