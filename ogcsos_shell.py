@@ -3,7 +3,7 @@
 #
 # simple shell interface for OGC API 
 #
-# 2017-01-22 created by S.Miyamoto@SPP
+# 2017-01-22 created by Satoru MIYAMOTO
 #
 #
 import argparse
@@ -11,8 +11,10 @@ import os
 from ogcsosapi import SOSServer
 from datetime import datetime, timedelta
 
-# to prevent ArgumentParser to exit after printing help.
 class AP(argparse.ArgumentParser):
+    """inherits ArgumentParser to prevent it to exit after printing help.
+
+    """
     def exit(self, status=0, message=None):
         raise argparse.ArgumentError(None, '')
 
