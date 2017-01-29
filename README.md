@@ -15,7 +15,7 @@ There is two way to use this script, shell mode and command mode as bellow:
 
 ### shell mode
 
-To use shell mode of it, run ogcsos_shell.py with token option.
+To use shell mode of it, run ogcsos_shell.py with --token option.
 At first the script executes GetCapabilities, so it takes a while.
 After that you will see SOS shell prompt 'SOS: ' and you can execute some commands.
 
@@ -29,7 +29,7 @@ SOS:
 ```
 
 #### server command
-shows the server information
+shows the server information.
 
 ```shell-session
 SOS: server
@@ -42,7 +42,7 @@ SOS Server:
 ```
 
 #### provider command
-shows provider of the server information
+shows provider of the server information.
 
 ```shell-session
 SOS: provider
@@ -62,7 +62,7 @@ SOS: nodes
  3: WeatherStation-LUFFT
 ...
 ```
-with -l option, it shows a list with description.
+with -l option, it shows a list with detailed description.
 
 ```shell-session
 SOS: nodes -l
@@ -74,7 +74,7 @@ SOS: nodes -l
 
 #### sensors command
 shows sensors (observed properties) list in specified sensor node.
-To specify a sensor node, you can use a number in sensor nodes list given by nodes command or a name of the sensor node.
+To specify a sensor node, you can use a number in sensor nodes list given by 'nodes' command or a name of the sensor node.
 
 ```shell-session
 SOS: sensors 3
@@ -109,9 +109,9 @@ SOS: sensors WeatherStation-LUFFT
 ```
 
 #### measures command
-get measurements of specified sensors of a ndoe and time range
+get measurements of specified sensors of a node and time range.
 To specify a sensor node, you can use a number or a name of it with -n option.
-To specify sensors, you can use a number in sensors list given by sensors command or a name of the sensor. You can specify multiple sensors with separator space.
+To specify sensors, you can use a number in sensors list given by 'sensors' command or a name of the sensor. You can specify multiple sensors with separator space.
 In Following example, 1st and 2nd sensor(air_temperature, relative_humidity) in 3rd sensor node (WeatherStation-LUFFT) is specified.
 
 ```shell-session
@@ -136,7 +136,7 @@ time,air_temperature,relative_humidity
 2017-01-29 11:32:00,11.9,39.9
 ```
 
-Without time range option, it gets measurements from 5 minutes age to now.
+Without time range option, it gets measurements in past 5 minutes.
 You can specify time range using -s and -e option.
 
 ```shell-session
@@ -191,7 +191,7 @@ time,air_temperature,relative_humidity
 ### command mode
 
 You can use command mode of this script to run from your own scripts.
-To do so, run it with token and command option.
+To do so, run it with --token and --command option.
 You can specify a command same as one you can use in shell mode.
 
 ```shell-session
@@ -206,11 +206,11 @@ time,air_temperature,relative_humidity
 ```
 
 You can still use a number of sensor node or sensor in the command, but it takes a while because it has to execute GetCapabilities.
-You may want to get result faster by specify exact name of sensor node or sensor.
-You can use instant option to do it.
+You may want to get results faster by specifying exact name of sensor node or sensor.
+You can use --instant option to do it. In this case, you have to specify an exact name of sensor node, eg. 'TEST:Field:SenserNodeName'.
 
 ```shell-session
-$ ./ogcsos_shell.py --token xxxx --command 'measures -n TEST:Field:SensorNode air_temperature relative_humidity' --instant
+$ ./ogcsos_shell.py --token xxxx --command 'measures -n TEST:Field:WeatherStation-LUFFT air_temperature relative_humidity' --instant
 time,air_temperature,relative_humidity
 2017-01-29 12:41:00,13.2,29.8
 2017-01-29 12:42:00,13.1,31.1
