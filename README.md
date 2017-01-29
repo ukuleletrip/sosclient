@@ -8,15 +8,15 @@ OGC SOS API module and its sample (simple shell interface)
 
 ## ogcsos_shell
 
-ogcsos_shell is a simple shell interface for SOS API.
+ogcsos_shell is a simple shell interface for SOS API.  
 You can use it just for using SOS API or sample python script to use SOS API from your code.
 
 There is two way to use this script, shell mode and command mode as bellow:
 
 ### shell mode
 
-To use shell mode of it, run ogcsos_shell.py with --token option.
-At first the script executes GetCapabilities, so it takes a while.
+To use shell mode of it, run ogcsos_shell.py with --token option.  
+At first the script executes GetCapabilities, so it takes a while.  
 After that you will see SOS shell prompt 'SOS: ' and you can execute some commands.
 
 ```shell-sesstion
@@ -31,7 +31,7 @@ SOS:
 #### server command
 shows the server information.
 
-```shell-session
+```ShellSession
 SOS: server
 SOS Server: 
  service type     : OGC:SOS
@@ -44,7 +44,7 @@ SOS Server:
 #### provider command
 shows provider of the server information.
 
-```shell-session
+```ShellSession
 SOS: provider
 xxxx University: 
  administrator  xxxxx: 
@@ -55,7 +55,7 @@ xxxx University:
 #### nodes command
 shows sensor nodes (observation offerings) list in the server.
 
-```shell-session
+```ShellSession
 SOS: nodes
  1: FieldRouter-001
  2: Shinshu-NGYU
@@ -64,7 +64,7 @@ SOS: nodes
 ```
 with -l option, it shows a list with detailed description.
 
-```shell-session
+```ShellSession
 SOS: nodes -l
  1: FieldRouter-001 : vbox0151  FR Id of X-Ability
  2: Shinshu-NGYU : Shinshu Camera
@@ -73,10 +73,10 @@ SOS: nodes -l
 ```
 
 #### sensors command
-shows sensors (observed properties) list in specified sensor node.
+shows sensors (observed properties) list in specified sensor node.  
 To specify a sensor node, you can use a number in sensor nodes list given by 'nodes' command or a name of the sensor node.
 
-```shell-session
+```ShellSession
 SOS: sensors 3
  1: air_temperature
  2: relative_humidity
@@ -109,12 +109,12 @@ SOS: sensors WeatherStation-LUFFT
 ```
 
 #### measures command
-get measurements of specified sensors of a node and time range.
-To specify a sensor node, you can use a number or a name of it with -n option.
-To specify sensors, you can use a number in sensors list given by 'sensors' command or a name of the sensor. You can specify multiple sensors with separator space.
+gets measurements of specified sensors of a node and time range.  
+To specify a sensor node, you can use a number or a name of it with -n option.  
+To specify sensors, you can use a number in sensors list given by 'sensors' command or a name of the sensor. You can specify multiple sensors with separator space.  
 In Following example, 1st and 2nd sensor(air_temperature, relative_humidity) in 3rd sensor node (WeatherStation-LUFFT) is specified.
 
-```shell-session
+```ShellSession
 SOS: measures -n 3 1 2
 time,air_temperature,relative_humidity
 2017-01-29 11:28:00,11.5,39.9
@@ -126,7 +126,7 @@ time,air_temperature,relative_humidity
 
 Also you can do it as below:
 
-```shell-session
+```ShellSession
 SOS: measures -n WeatherStation-LUFFT air_temperature relative_humidity
 time,air_temperature,relative_humidity
 2017-01-29 11:28:00,11.5,39.9
@@ -136,10 +136,10 @@ time,air_temperature,relative_humidity
 2017-01-29 11:32:00,11.9,39.9
 ```
 
-Without time range option, it gets measurements in past 5 minutes.
+Without time range option, it gets measurements in past 5 minutes.  
 You can specify time range using -s and -e option.
 
-```shell-session
+```ShellSession
 SOS: measures -n 3 -s 2017-01-20T00:00:00 -e 2017-01-20T00:03:00 1 2
 time,air_temperature,relative_humidity
 2017-01-20 00:00:00,2.2,66.3
@@ -160,7 +160,7 @@ A variety of time formats is allowed as bellow:
 
 If time is not specified, it is interpreted time is 00:00:00.
 
-```shell-session
+```ShellSession
 SOS: measures -n 3 -s 2017-01-20 -e 2017-01-21 1 2
 time,air_temperature,relative_humidity
 2017-01-20 00:00:00,2.2,66.3
@@ -177,7 +177,7 @@ time,air_temperature,relative_humidity
 
 If date is not specified, it is interpreted date is today.
 
-```shell-session
+```ShellSession
 SOS: measures -n 3 -s 0800 -e 0805 1 2
 time,air_temperature,relative_humidity
 2017-01-29 08:00:00,2.4,73.2
@@ -190,11 +190,11 @@ time,air_temperature,relative_humidity
 
 ### command mode
 
-You can use command mode of this script to run from your own scripts.
-To do so, run it with --token and --command option.
+You can use command mode of this script to run from your own scripts.  
+To do so, run it with --token and --command option.  
 You can specify a command same as one you can use in shell mode.
 
-```shell-session
+```ShellSession
 $ ./ogcsos_shell.py --token xxxx --command 'measures -n 3 1 2'
 time,air_temperature,relative_humidity
 2017-01-29 11:45:00,11.7,39.1
@@ -205,11 +205,11 @@ time,air_temperature,relative_humidity
 2017-01-29 11:50:00,11.8,40.3
 ```
 
-You can still use a number of sensor node or sensor in the command, but it takes a while because it has to execute GetCapabilities.
-You may want to get results faster by specifying exact name of sensor node or sensor.
+You can still use a number of sensor node or sensor in the command, but it takes a while because it has to execute GetCapabilities.  
+You may want to get results faster by specifying exact name of sensor node or sensor.  
 You can use --instant option to do it. In this case, you have to specify an exact name of sensor node, eg. 'TEST:Field:SenserNodeName'.
 
-```shell-session
+```ShellSession
 $ ./ogcsos_shell.py --token xxxx --command 'measures -n TEST:Field:WeatherStation-LUFFT air_temperature relative_humidity' --instant
 time,air_temperature,relative_humidity
 2017-01-29 12:41:00,13.2,29.8
