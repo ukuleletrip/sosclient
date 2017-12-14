@@ -268,6 +268,48 @@ def build_get_capabitilies_request(namespaces):
     return root
 
 
+def build_insert_observation_request(procedure, measurements, namespaces):
+    """builds request XML for InsertObservation.
+
+    Args:
+      procedure (str): SOSName, procedure. ex. 'TEST:Field:SensorNodeName'
+      measurements (dict): has a datetime object as key and
+                           its value (dict) has a property as key and
+                           its value (dict) has a dict which has 'value' and 'uom'.
+      namespaces (dict): has qname as key and URI as value, represents namespaces for XML
+
+    Returns:
+      Element object: 
+
+    """
+    attrib = copy.deepcopy(namespaces)
+    # it is weird that we cannot use sos namespace for GetCapabilities
+    attrib['xmlns'] = attrib['xmlns:sos']
+    attrib['service'] = 'SOS'
+    root = Element('InsertObservation', attrib)
+
+    SubElement(root, 'sos:offering').text = procedure
+
+    for dt in measurements:
+        for prop in measurements[dt]:
+            observation = SubElement(root, 'sos:observation')
+            om_observation = SubElement(observation, 'om:OM_Observation', { 'gml:id': 'obsTest1' })
+            SubElement(om_observation, 'om:type',
+                       { 'xlink:hrel': 'http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement' })
+            phenomenon_time = SubElement(om_observation, 'om:phenomenonTime')
+            time_instant = SubElement(phenomenon_time, 'gml:TimeInstant',
+                                      { 'gml:id': 'phenomenonTime' })
+            SubElement(time_instant, 'gml:timePosition').text = dt.strftime(ISO8601_FMT)
+            SubElement(om_observation, 'om:resultTime', { 'xlink:href': '#phenomenonTime' })
+            SubElement(om_observation, 'om:procedure').text = procedure
+            SubElement(om_observation, 'sos:observedProperty').text = prop
+            SubElement(om_observation, 'om:result', { 'xsi:type': 'gml:MeasureType',
+                                                      'uom'     : measurements[dt][prop]['uom'] }
+            ).text = str(measurements[dt][prop]['value'])
+    
+    return root
+
+
 def call_ogc_api(url, req_body):
     """call ogc API
 
@@ -416,6 +458,11 @@ def get_result(url, procedure, properties, time_range):
     return measurements
 
 
+def insert_observation(url, procedure, measurements):
+    req = build_insert_observation_request(procedure, measurements, default_ogc_namespaces())
+    (resp_root, namespaces) = call_ogc_api(url, tostring(req, 'utf-8'))
+
+
 class SOSServer(object):
     """a class represents SOS Server.
 
@@ -508,6 +555,13 @@ class SOSServer(object):
         return get_result(self._get_api_url(),
                           self._get_procedure(offering),
                           properties, time_range)
+
+
+    def insert_observation(self, offering, measurements):
+        return insert_observation(self._get_api_url(),
+                                  self._get_procedure(offering),
+                                  measurements)
+
 
     def update_capabilities(self):
         """execute GetCapabilities operation and holds its result in the instance.
