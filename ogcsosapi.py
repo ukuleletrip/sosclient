@@ -18,9 +18,11 @@ import copy
 import StringIO
 from datetime import datetime
 from xml.etree import ElementTree as ET
-from xml.etree.ElementTree import Element, SubElement, tostring, fromstring
+from xml.etree.ElementTree import Element, SubElement, tostring, fromstring, ParseError
 
 ISO8601_FMT = '%Y-%m-%dT%H:%M:%S+0900'
+
+debug=False
 
 def get_namespaces(xmlfile):
     """read namespace definitions from XML file's root tag.
@@ -283,11 +285,9 @@ def build_insert_observation_request(procedure, measurements, namespaces):
 
     """
     attrib = copy.deepcopy(namespaces)
-    # it is weird that we cannot use sos namespace for GetCapabilities
-    attrib['xmlns'] = attrib['xmlns:sos']
     attrib['service'] = 'SOS'
-    root = Element('InsertObservation', attrib)
-
+    attrib['version'] = '2.0.0'
+    root = Element('sos:InsertObservation', attrib)
     SubElement(root, 'sos:offering').text = procedure
 
     for dt in measurements:
@@ -305,7 +305,7 @@ def build_insert_observation_request(procedure, measurements, namespaces):
             SubElement(om_observation, 'sos:observedProperty').text = prop
             SubElement(om_observation, 'om:result', { 'xsi:type': 'gml:MeasureType',
                                                       'uom'     : measurements[dt][prop]['uom'] }
-            ).text = str(measurements[dt][prop]['value'])
+            ).text = measurements[dt][prop]['value']
     
     return root
 
@@ -322,13 +322,24 @@ def call_ogc_api(url, req_body):
                        2nd returned dict is namespace dictionary from response.
 
     """
+    if debug:
+        print req_body
+
     req = urllib2.Request(url,
                           req_body.encode('utf-8'),
                           {'content-type' : 'application/xml; charset="utf-8"'})
     resp = urllib2.urlopen(req)
     resp_body = resp.read()
-    namespaces = get_namespaces(StringIO.StringIO(resp_body))
-    return fromstring(resp_body), namespaces
+
+    if debug:
+        print resp_body
+
+    try:
+        namespaces = get_namespaces(StringIO.StringIO(resp_body))
+        return fromstring(resp_body), namespaces
+    except ParseError:
+        # some response seems to be illegal.
+        return resp_body, None
 
 
 def get_capabilities(url):
@@ -457,10 +468,23 @@ def get_result(url, procedure, properties, time_range):
 
     return measurements
 
-
 def insert_observation(url, procedure, measurements):
     req = build_insert_observation_request(procedure, measurements, default_ogc_namespaces())
     (resp_root, namespaces) = call_ogc_api(url, tostring(req, 'utf-8'))
+    # <sos:InsertObservationResponse>
+    #   <sos:observation>Inserted</sos:observation>
+    # </sos:InsertObservationResponse>
+    # but, it should be
+    # <sos:InsertObservationResponse xmlns:sos="http://www.opengis.net/sos/2.0">
+    #   <sos:observation>Inserted</sos:observation>
+    # </sos:InsertObservationResponse>
+    if namespaces is None:
+        # illegal response
+        result = resp_root
+    else:
+        result = resp_root.find(get_cn_tag('sos:InsertObservationResponse/sos:observation',
+                                           namespaces)).text.strip().split('\n')
+    return result
 
 
 class SOSServer(object):

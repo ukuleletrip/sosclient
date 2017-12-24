@@ -8,6 +8,7 @@
 #
 import argparse
 import os
+import ogcsosapi
 from ogcsosapi import SOSServer
 from datetime import datetime, timedelta
 
@@ -25,6 +26,7 @@ def parse_args():
     parser.add_argument("--endpoint", help="endpoint of SOS Server",
                         default='https://cs.listenfield.com/OGCAPIV2.jsp')
     parser.add_argument('--command', help='command to execute')
+    parser.add_argument('--debug', action='store_true', help='enable debug mode')
     parser.add_argument('--instant', action='store_true',
                         help='prevent to call GetCapability, you must specify node or sensor by name.')
     args = parser.parse_args()
@@ -35,6 +37,8 @@ def print_help():
     nodes                          : list all sensor nodes served by the server
     sensors [node]                 : list all sensors in the node
     measures -n [node] [sensors..] : get measurements of sensors of a node
+    put-measures -n [node] [date] [property] [value]
+                                   : put measurement to a sensor of a node
     server                         : show server info
     provider                       : show provider info
     help                           : print this help
@@ -205,6 +209,32 @@ def get_measurements(args, sosserver):
                 line.append('')
         print ','.join(line)
 
+def put_measurements(args, sosserver):
+    parser = AP(prog='put-measurements')
+    parser.add_argument('-n', help='node name or number', required=True)
+    parser.add_argument('measures', nargs=4, help='date, observed property, value, uom to put')
+    try:
+        opts = parser.parse_args(args)
+    except:
+        return
+
+    try:
+        dt = parse_cmd_datetime(opts.measures[0])
+    except ValueError:
+        print 'invalid datetime is specified. Please use format, 2016-10-26T00:00:00'
+        return
+    
+    the_node = get_node_from_name_or_number(opts.n, sosserver.observations)
+    if not the_node:
+        print 'No node was found !!'
+        return
+
+    measurements = { dt : { opts.measures[1] : { 'value' : opts.measures[2],
+                                                 'uom'   : opts.measures[3]  } } }
+    response = sosserver.insert_observation(the_node, measurements)
+    print response
+
+
 def exec_command(cmd, sosserver):
     if len(cmd) == 0:
         return True
@@ -224,12 +254,17 @@ def exec_command(cmd, sosserver):
         list_sensors(args[1:], sosserver)
     elif args[0] == 'measurements' or args[0] == 'measures':
         get_measurements(args[1:], sosserver)
+    elif args[0] == 'put-measurements' or args[0] == 'put-measures':
+        put_measurements(args[1:], sosserver)
     else:
         print_help()
     return True
 
 def main():
     opts = parse_args()
+
+    if opts.debug:
+        ogcsosapi.debug = True
 
     if not opts.command:
         print 'Simple Shell Interface for OGC SOS API by Satoru MIYAMOTO\n'
