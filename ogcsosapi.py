@@ -20,9 +20,15 @@ from datetime import datetime
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement, tostring, fromstring, ParseError
 
-ISO8601_FMT = '%Y-%m-%dT%H:%M:%S+0900'
+ISO8601_NO_TZ = '%Y-%m-%dT%H:%M:%S'
+ISO8601_JST = '%Y-%m-%dT%H:%M:%S+0900'
 
 debug=False
+
+def parse_iso8601_datetime(dt_str):
+    elms = dt_str.split('+')
+    return datetime.strptime(elms[0], ISO8601_NO_TZ)
+    
 
 def get_namespaces(xmlfile):
     """read namespace definitions from XML file's root tag.
@@ -170,7 +176,7 @@ def parse_provider(provider_, namespaces):
 def parse_observation(observation, namespaces):
     time = observation.find(get_cn_tag('om:phenomenonTime/gml:TimeInstant/gml:timePosition',
                                        namespaces)).text
-    dt = datetime.strptime(time, ISO8601_FMT)
+    dt = parse_iso8601_datetime(time)
     result = observation.find(get_cn_tag('om:result', namespaces))
     return (dt, observation.find(get_cn_tag('om:observedProperty',
                                             namespaces)).text.strip('"'),
@@ -201,8 +207,8 @@ def _build_get_data_request(procedure, properties, time_range, operation, namesp
     during = SubElement(temporal_filter, 'fes:During')
     SubElement(during, 'fes:ValueReference').text = 'phenomenonTime'
     time_period = SubElement(during, 'gml:TimePeriod', {'gml:id' : 't1'})
-    SubElement(time_period, 'gml:beginPosition').text = time_range[0].strftime(ISO8601_FMT)
-    SubElement(time_period, 'gml:endPosition').text = time_range[1].strftime(ISO8601_FMT)
+    SubElement(time_period, 'gml:beginPosition').text = time_range[0].strftime(ISO8601_JST)
+    SubElement(time_period, 'gml:endPosition').text = time_range[1].strftime(ISO8601_JST)
     return root
 
 
@@ -299,7 +305,7 @@ def build_insert_observation_request(procedure, measurements, namespaces):
             phenomenon_time = SubElement(om_observation, 'om:phenomenonTime')
             time_instant = SubElement(phenomenon_time, 'gml:TimeInstant',
                                       { 'gml:id': 'phenomenonTime' })
-            SubElement(time_instant, 'gml:timePosition').text = dt.strftime(ISO8601_FMT)
+            SubElement(time_instant, 'gml:timePosition').text = dt.strftime(ISO8601_JST)
             SubElement(om_observation, 'om:resultTime', { 'xlink:href': '#phenomenonTime' })
             SubElement(om_observation, 'om:procedure').text = procedure
             SubElement(om_observation, 'sos:observedProperty').text = prop
@@ -453,7 +459,7 @@ def get_result(url, procedure, properties, time_range):
     for l in results:
         elem = l.split(',')
         if len(elem) == 2:
-            dt = datetime.strptime(elem[0], ISO8601_FMT)
+            dt = parse_iso8601_datetime(elem[0])
             value = {'value' : float(elem[1]), 'uom' : ''}
 
             if prev_dt and dt < prev_dt:
