@@ -212,25 +212,35 @@ def get_measurements(args, sosserver):
 def put_measurements(args, sosserver):
     parser = AP(prog='put-measurements')
     parser.add_argument('-n', help='node name or number', required=True)
-    parser.add_argument('measures', nargs=4, help='date, observed property, value, uom to put')
+    parser.add_argument('measures', nargs='+', help='<date,observed property,value,uom> to put')
     try:
         opts = parser.parse_args(args)
     except:
         return
 
-    try:
-        dt = parse_cmd_datetime(opts.measures[0])
-    except ValueError:
-        print 'invalid datetime is specified. Please use format, 2016-10-26T00:00:00'
-        return
-    
+   
     the_node = get_node_from_name_or_number(opts.n, sosserver.observations)
     if not the_node:
         print 'No node was found !!'
         return
 
-    measurements = { dt : { opts.measures[1] : { 'value' : opts.measures[2],
-                                                 'uom'   : opts.measures[3]  } } }
+    measurements = {}
+    for measure in opts.measures:
+        elms = measure.split(',')
+        try:
+            dt = parse_cmd_datetime(elms[0])
+        except ValueError:
+            print 'invalid datetime is specified. Please use format, 2016-10-26T00:00:00'
+            return
+
+        if dt not in measurements:
+            measurements[dt] = {}
+        if elms[1] not in measurements[dt]:
+            measurements[dt][elms[1]] = {}
+
+        measurements[dt][elms[1]]['value'] = elms[2]
+        measurements[dt][elms[1]]['uom'] = elms[3]
+
     response = sosserver.insert_observation(the_node, measurements)
     print response
 
