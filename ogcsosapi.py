@@ -99,6 +99,7 @@ def default_ogc_namespaces():
         'xmlns:wsa' : 'http://www.w3.org/2005/08/addressing',
         'xmlns:xs'  : 'http://www.w3.org/2001/XMLSchema',
         'xmlns:xsi' : 'http://www.w3.org/2001/XMLSchema-instance',
+        'xmlns:xlink'        : 'http://www.w3.org/1999/xlink', 
         'xsi:schemaLocation' : 'http://www.opengis.net/sos/2.0'
                                ' http://schemas.opengis.net/sos/2.0/sos.xsd',
     }
@@ -488,8 +489,7 @@ def insert_observation(url, procedure, measurements):
         # illegal response
         result = resp_root
     else:
-        result = resp_root.find(get_cn_tag('sos:InsertObservationResponse/sos:observation',
-                                           namespaces)).text.strip().split('\n')
+        result = resp_root.find(get_cn_tag('sos:observation', namespaces)).text
     return result
 
 
