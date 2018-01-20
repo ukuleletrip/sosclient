@@ -16,14 +16,26 @@ import HTMLParser
 import urllib2
 import copy
 import StringIO
-from datetime import datetime
+from datetime import datetime, timedelta, tzinfo
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement, tostring, fromstring, ParseError
+import time
 
 ISO8601_NO_TZ = '%Y-%m-%dT%H:%M:%S'
 ISO8601_JST = '%Y-%m-%dT%H:%M:%S+0900'
 
 debug=False
+
+class LocalTimezone(tzinfo):
+    def utcoffset(self, dt):
+        return timedelta(seconds=-time.timezone)
+
+    def dst(self, dt):
+        return timedelta(0)
+
+    def tzname(self, dt):
+        return time.tzname[0]
+
 
 def parse_iso8601_datetime(dt_str):
     elms = dt_str.split('+')
@@ -317,7 +329,7 @@ def build_insert_observation_request(procedure, measurements, namespaces):
     return root
 
 
-def call_ogc_api(url, req_body):
+def call_ogc_api(url, req_body, token=None, token_param=None):
     """call ogc API
 
     Args:
@@ -332,9 +344,12 @@ def call_ogc_api(url, req_body):
     if debug:
         print req_body
 
-    req = urllib2.Request(url,
+    headers = {'content-type' : 'application/xml; charset="utf-8"'}
+    if 'header' in url:
+        headers.update(url['header'])
+    req = urllib2.Request(url['url'],
                           req_body.encode('utf-8'),
-                          {'content-type' : 'application/xml; charset="utf-8"'})
+                          headers)
     resp = urllib2.urlopen(req)
     resp_body = resp.read()
 
@@ -515,7 +530,7 @@ class SOSServer(object):
 
     """
 
-    def __init__(self, endpoint, token):
+    def __init__(self, endpoint, token, is_token_header=False):
         self.endpoint = endpoint
         self.token = token
         self.server = None
@@ -523,14 +538,18 @@ class SOSServer(object):
         self.operations = []
         self.filters = []
         self.observations = []
+        self.is_token_header = is_token_header
 
     @staticmethod
     def _get_procedure(offering):
         return offering if type(offering) == str else offering.procedure
 
     def _get_api_url(self):
-        return '%s?Key=%s' % (self.endpoint, self.token)
-
+        if not self.is_token_header and self.token:
+            return { 'url' : '%s?Key=%s' % (self.endpoint, self.token) }
+        else:
+            return { 'url'    : self.endpoint,
+                     'header' : { 'Authorization' : self.token } }
 
     def get_capabilities(self):
         """execute GetCapabilities operation in context of the SOSServer instance.

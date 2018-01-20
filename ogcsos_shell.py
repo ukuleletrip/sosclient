@@ -23,6 +23,7 @@ class AP(argparse.ArgumentParser):
 def parse_args():
     parser = argparse.ArgumentParser(description='Simple Shell Interface for OGC SOS API')
     parser.add_argument("--token", required=True, help="your Token to use SOS API")
+    parser.add_argument("--is_token_header", action='store_true')
     parser.add_argument("--endpoint", help="endpoint of SOS Server",
                         default='https://cs.listenfield.com/OGCAPIV2.jsp')
     parser.add_argument('--command', help='command to execute')
@@ -279,7 +280,7 @@ def main():
     if not opts.command:
         print 'Simple Shell Interface for OGC SOS API by Satoru MIYAMOTO\n'
         
-    sosserver = SOSServer(opts.endpoint, opts.token)
+    sosserver = SOSServer(opts.endpoint, opts.token, opts.is_token_header)
     if not opts.instant:
         sosserver.update_capabilities()
         if not opts.command:
