@@ -11,6 +11,7 @@ import os
 import ogcsosapi
 from ogcsosapi import SOSServer
 from datetime import datetime, timedelta
+import readline
 
 class AP(argparse.ArgumentParser):
     """inherits ArgumentParser to prevent it to exit after printing help.
