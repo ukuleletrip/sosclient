@@ -39,7 +39,7 @@ def print_help():
     nodes                          : list all sensor nodes served by the server
     sensors [node]                 : list all sensors in the node
     measures -n [node] [sensors..] : get measurements of sensors of a node
-    put-measures -n [node] [date] [property] [value]
+    put-measures -n [node] [date,property,value,uom]
                                    : put measurement to a sensor of a node
     server                         : show server info
     provider                       : show provider info
