@@ -308,6 +308,7 @@ def build_insert_observation_request(procedure, measurements, namespaces):
     attrib['version'] = '2.0.0'
     root = Element('sos:InsertObservation', attrib)
     SubElement(root, 'sos:offering').text = procedure
+    #SubElement(root, 'swe:responseFormat').text = 'JSON_WITH_CONSTANTS'
 
     for dt in measurements:
         for prop in measurements[dt]:
@@ -350,7 +351,13 @@ def call_ogc_api(url, req_body, token=None, token_param=None):
     req = urllib2.Request(url['url'],
                           req_body.encode('utf-8'),
                           headers)
-    resp = urllib2.urlopen(req)
+    try:
+        resp = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+        print e.code, e.reason
+        print e.read()
+        return None, None
+        
     resp_body = resp.read()
 
     if debug:

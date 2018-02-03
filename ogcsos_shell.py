@@ -13,6 +13,8 @@ from ogcsosapi import SOSServer
 from datetime import datetime, timedelta
 import readline
 
+HISTORY_FILE = '.ogcsos_shell_history'
+
 class AP(argparse.ArgumentParser):
     """inherits ArgumentParser to prevent it to exit after printing help.
 
@@ -227,21 +229,30 @@ def put_measurements(args, sosserver):
         return
 
     measurements = {}
+    dt = None
     for measure in opts.measures:
         elms = measure.split(',')
-        try:
-            dt = parse_cmd_datetime(elms[0])
-        except ValueError:
-            print 'invalid datetime is specified. Please use format, 2016-10-26T00:00:00'
-            return
+        if dt is None or len(elms) == 4:
+            # use same datetime
+            try:
+                dt = parse_cmd_datetime(elms[0])
+            except ValueError:
+                print 'invalid datetime is specified. Please use format, 2016-10-26T00:00:00'
+                return
+
+            offset = 1
+        elif len(elms) == 3:
+            offset = 0
 
         if dt not in measurements:
             measurements[dt] = {}
-        if elms[1] not in measurements[dt]:
-            measurements[dt][elms[1]] = {}
 
-        measurements[dt][elms[1]]['value'] = elms[2]
-        measurements[dt][elms[1]]['uom'] = elms[3]
+        prop = get_prop_from_name_or_number(elms[offset], the_node)
+        if prop not in measurements[dt]:
+            measurements[dt][prop] = {}
+
+        measurements[dt][prop]['value'] = elms[offset+1]
+        measurements[dt][prop]['uom'] = elms[offset+2]
 
     response = sosserver.insert_observation(the_node, measurements)
     print response
@@ -291,11 +302,20 @@ def main():
         exec_command(opts.command, sosserver)
         return
 
+    # read history file
+    histfile = os.path.expanduser('~/' + HISTORY_FILE)
+    if os.path.exists(histfile):
+        readline.read_history_file(HISTORY_FILE)
+
     prompt = '\nSOS: ' if os.name == 'nt' else '\n\033[1;32mSOS: \033[1;m'
     while True:
         cmd = raw_input(prompt)
         if not exec_command(cmd, sosserver):
             break
+
+    # write history file
+    readline.set_history_length(100)
+    readline.write_history_file(histfile)
 
 if __name__ == '__main__':
     main()
