@@ -6,16 +6,23 @@ This module allows SOS client developer to use SOS API easily.
 It provides SOSServer class and functions to use SOS API.
 
 """
+from __future__ import print_function
 
 __version__ = '1.0'
 __author__ = 'Satoru MIYAMOTO'
 __date__ = '2017-01-19'
 __license__ = 'MIT'
 
-import HTMLParser
-import urllib2
+import sys
+if sys.version_info[0] == 2:
+    import HTMLParser
+    from urllib2 import urlopen, Request, HTTPError
+else:
+    from html.parser import HTMLParser
+    from urllib.request import urlopen, Request
+    from urllib.error import HTTPError
 import copy
-import StringIO
+from io import StringIO
 from datetime import datetime, timedelta, tzinfo
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement, tostring, fromstring, ParseError
@@ -343,28 +350,33 @@ def call_ogc_api(url, req_body, token=None, token_param=None):
 
     """
     if debug:
-        print req_body
+        print(req_body)
+
+    if type(req_body) == bytes:
+        pass
+    else:
+        req_body = req_body.encode('utf-8')
 
     headers = {'content-type' : 'application/xml; charset="utf-8"'}
     if 'header' in url:
         headers.update(url['header'])
-    req = urllib2.Request(url['url'],
-                          req_body.encode('utf-8'),
-                          headers)
+    req = Request(url['url'],
+                  req_body,
+                  headers)
     try:
-        resp = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-        print e.code, e.reason
-        print e.read()
+        resp = urlopen(req)
+    except HTTPError as e:
+        print(e.code, e.reason)
+        print(e.read())
         return None, None
         
     resp_body = resp.read()
 
     if debug:
-        print resp_body
+        print(resp_body)
 
     try:
-        namespaces = get_namespaces(StringIO.StringIO(resp_body))
+        namespaces = get_namespaces(StringIO(resp_body.decode('utf-8')))
         return fromstring(resp_body), namespaces
     except ParseError:
         # some response seems to be illegal.

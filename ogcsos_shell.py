@@ -6,6 +6,12 @@
 # 2017-01-22 created by Satoru MIYAMOTO
 #
 #
+from __future__ import print_function
+import sys
+if sys.version_info[0] == 2:
+    user_input = raw_input
+else:
+    user_input = input
 import argparse
 import os
 import ogcsosapi
@@ -37,7 +43,7 @@ def parse_args():
     return args
 
 def print_help():
-    print '''
+    print('''
     nodes                          : list all sensor nodes served by the server
     sensors [node]                 : list all sensors in the node
     measures -n [node] [sensors..] : get measurements of sensors of a node
@@ -46,7 +52,7 @@ def print_help():
     server                         : show server info
     provider                       : show provider info
     help                           : print this help
-'''
+''')
 
 def list_nodes(args, sosserver):
     parser = AP(prog='nodes')
@@ -57,25 +63,25 @@ def list_nodes(args, sosserver):
         return 
     for i, node in enumerate(sosserver.observations):
         if opts.l:
-            print '%2d: %s : %s' % (i+1, node.name, node.description)
+            print('%2d: %s : %s' % (i+1, node.name, node.description))
         else:
-            print '%2d: %s' % (i+1, node.name)
+            print('%2d: %s' % (i+1, node.name))
 
 def show_server(sosserver):
-    print '%s: ' % (sosserver.server.name)
-    print ' service type     : %s' % (sosserver.server.service_type)
-    print ' service version  : %s' % (sosserver.server.service_version)
-    print ' service fees     : %s' % (sosserver.server.fees)
-    print ' served operations:'
-    print '       %s' % (','.join(sosserver.operations))
+    print('%s: ' % (sosserver.server.name))
+    print(' service type     : %s' % (sosserver.server.service_type))
+    print(' service version  : %s' % (sosserver.server.service_version))
+    print(' service fees     : %s' % (sosserver.server.fees))
+    print(' served operations:')
+    print('       %s' % (','.join(sosserver.operations)))
 
 def show_provider(sosserver):
-    print '%s: ' % (sosserver.provider.name)
-    print ' administrator  : %s' % (sosserver.provider.indiviual_name)
-    print ' address:'
-    print '    %s' % (sosserver.provider.point)
-    print '    %s, %s, %s' % (sosserver.provider.city, 
-                              sosserver.provider.pref, sosserver.provider.country)
+    print('%s: ' % (sosserver.provider.name))
+    print(' administrator  : %s' % (sosserver.provider.indiviual_name))
+    print(' address:')
+    print('    %s' % (sosserver.provider.point))
+    print('    %s, %s, %s' % (sosserver.provider.city, 
+                              sosserver.provider.pref, sosserver.provider.country))
 
 def get_node_from_name_or_number(ind, nodes):
     the_node = None
@@ -123,9 +129,9 @@ def list_sensors(args, sosserver):
     the_node = get_node_from_name_or_number(opts.sensor, sosserver.observations)
     if the_node:
         for i, prop in enumerate(the_node.properties):
-            print '%2d: %s' % (i+1, prop)
+            print('%2d: %s' % (i+1, prop))
     else:
-        print 'No node was found !!'
+        print('No node was found !!')
 
 def parse_cmd_datetime(dtstr):
     tries = [
@@ -174,15 +180,15 @@ def get_measurements(args, sosserver):
             else:
                 e_dt = datetime.now()
             if s_dt >= e_dt:
-                print 'start datetime must be less than end datetime !'
+                print('start datetime must be less than end datetime !')
                 return
     except ValueError:
-        print 'invalid datetime is specified. Please use format, 2016-10-26T00:00:00'
+        print('invalid datetime is specified. Please use format, 2016-10-26T00:00:00')
         return
 
     the_node = get_node_from_name_or_number(opts.n, sosserver.observations)
     if not the_node:
-        print 'No node was found !!'
+        print('No node was found !!')
         return
 
     if not opts.s:
@@ -202,7 +208,7 @@ def get_measurements(args, sosserver):
     else:
         measurements = sosserver.get_observation(the_node, properties, [s_dt, e_dt])
 
-    print 'time,%s' % (','.join(properties))
+    print('time,%s' % (','.join(properties)))
     for dt, measure in sorted(measurements.items()):
         line = []
         line.append(dt.strftime('%Y-%m-%d %H:%M:%S'))
@@ -211,7 +217,7 @@ def get_measurements(args, sosserver):
                 line.append(str(measure[prop]['value']))
             else:
                 line.append('')
-        print ','.join(line)
+        print(','.join(line))
 
 def put_measurements(args, sosserver):
     parser = AP(prog='put-measurements')
@@ -225,7 +231,7 @@ def put_measurements(args, sosserver):
    
     the_node = get_node_from_name_or_number(opts.n, sosserver.observations)
     if not the_node:
-        print 'No node was found !!'
+        print('No node was found !!')
         return
 
     measurements = {}
@@ -237,7 +243,7 @@ def put_measurements(args, sosserver):
             try:
                 dt = parse_cmd_datetime(elms[0])
             except ValueError:
-                print 'invalid datetime is specified. Please use format, 2016-10-26T00:00:00'
+                print('invalid datetime is specified. Please use format, 2016-10-26T00:00:00')
                 return
 
             offset = 1
@@ -255,7 +261,7 @@ def put_measurements(args, sosserver):
         measurements[dt][prop]['uom'] = elms[offset+2]
 
     response = sosserver.insert_observation(the_node, measurements)
-    print response
+    print(response)
 
 
 def exec_command(cmd, sosserver):
@@ -290,31 +296,31 @@ def main():
         ogcsosapi.debug = True
 
     if not opts.command:
-        print 'Simple Shell Interface for OGC SOS API by Satoru MIYAMOTO\n'
+        print('Simple Shell Interface for OGC SOS API by Satoru MIYAMOTO\n')
         
     sosserver = SOSServer(opts.endpoint, opts.token, opts.is_token_header)
     if not opts.instant:
         sosserver.update_capabilities()
         if not opts.command:
-            print 'Welcome to %s by %s !' % (sosserver.server.name, sosserver.provider.name)
+            print('Welcome to %s by %s !' % (sosserver.server.name, sosserver.provider.name))
 
     if opts.command:
         exec_command(opts.command, sosserver)
         return
 
     # read history file
-    histfile = os.path.expanduser('~/' + HISTORY_FILE)
+    histfile = os.path.join(os.path.expanduser('~'), HISTORY_FILE)
     if os.path.exists(histfile):
-        readline.read_history_file(HISTORY_FILE)
+        readline.read_history_file(histfile)
+    readline.set_history_length(1000)
 
     prompt = '\nSOS: ' if os.name == 'nt' else '\n\033[1;32mSOS: \033[1;m'
     while True:
-        cmd = raw_input(prompt)
+        cmd = user_input(prompt)
         if not exec_command(cmd, sosserver):
             break
 
     # write history file
-    readline.set_history_length(100)
     readline.write_history_file(histfile)
 
 if __name__ == '__main__':
