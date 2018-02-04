@@ -15,7 +15,7 @@ __license__ = 'MIT'
 
 import sys
 if sys.version_info[0] == 2:
-    import HTMLParser
+    from HTMLParser import HTMLParser
     from urllib2 import urlopen, Request, HTTPError
 else:
     from html.parser import HTMLParser
@@ -201,7 +201,7 @@ def parse_observation(observation, namespaces):
     return (dt, observation.find(get_cn_tag('om:observedProperty',
                                             namespaces)).text.strip('"'),
             dict(value=float(result.text),
-                 uom=HTMLParser.HTMLParser().unescape(result.attrib['uom'])))
+                 uom=HTMLParser().unescape(result.attrib['uom'])))
 
 
 def parse_operations(operations_root, namespaces):

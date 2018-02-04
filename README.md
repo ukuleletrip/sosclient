@@ -28,6 +28,12 @@ Welcome to SOS Server !
 SOS: 
 ```
 
+If the SOS server requires Authorization header instead of URL parameter,  
+you need to use `--is_token_header` option.
+```shell-sesstion
+$ ./ogcsos_shell.py --token xxxxxxxxxxx --is_token_header
+```
+
 #### server command
 shows the server information.
 

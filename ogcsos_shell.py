@@ -126,6 +126,7 @@ def list_sensors(args, sosserver):
     except:
         return
     
+    print(opts.sensor)
     the_node = get_node_from_name_or_number(opts.sensor, sosserver.observations)
     if the_node:
         for i, prop in enumerate(the_node.properties):
