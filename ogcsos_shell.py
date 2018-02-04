@@ -164,6 +164,7 @@ def get_measurements(args, sosserver):
     parser = AP(prog='measurements')
     parser.add_argument('-s', help='start datetime')
     parser.add_argument('-e', help='end datetime')
+    parser.add_argument('-t', help='datetime of the data')
     parser.add_argument('-n', help='node name or number', required=True)
     parser.add_argument('-r', action='store_true', help='use GetResult')
     #parser.add_argument('--header', action='store_true', help='with header')
@@ -183,6 +184,11 @@ def get_measurements(args, sosserver):
             if s_dt >= e_dt:
                 print('start datetime must be less than end datetime !')
                 return
+            t_param = [ s_dt, e_dt ]
+        elif opts.t:
+            t_param = [ parse_cmd_datetime(opts.t) ]
+        else:
+            t_param = []
     except ValueError:
         print('invalid datetime is specified. Please use format, 2016-10-26T00:00:00')
         return
@@ -191,10 +197,6 @@ def get_measurements(args, sosserver):
     if not the_node:
         print('No node was found !!')
         return
-
-    if not opts.s:
-        e_dt = datetime.now()
-        s_dt = e_dt - timedelta(seconds=10*60)
 
     properties = []
     for sensor in opts.sensors:
@@ -205,9 +207,9 @@ def get_measurements(args, sosserver):
         properties.append(prop)
 
     if opts.r:
-        measurements = sosserver.get_result(the_node, properties, [s_dt, e_dt])
+        measurements = sosserver.get_result(the_node, properties, t_param)
     else:
-        measurements = sosserver.get_observation(the_node, properties, [s_dt, e_dt])
+        measurements = sosserver.get_observation(the_node, properties, t_param)
 
     print('time,%s' % (','.join(properties)))
     for dt, measure in sorted(measurements.items()):

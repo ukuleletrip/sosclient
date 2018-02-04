@@ -224,11 +224,22 @@ def _build_get_data_request(procedure, properties, time_range, operation, namesp
         SubElement(root, 'sos:observedProperty').text = prop
 
     temporal_filter = SubElement(root, 'sos:temporalFilter')
-    during = SubElement(temporal_filter, 'fes:During')
-    SubElement(during, 'fes:ValueReference').text = 'phenomenonTime'
-    time_period = SubElement(during, 'gml:TimePeriod', {'gml:id' : 't1'})
-    SubElement(time_period, 'gml:beginPosition').text = time_range[0].strftime(ISO8601_JST)
-    SubElement(time_period, 'gml:endPosition').text = time_range[1].strftime(ISO8601_JST)
+    if len(time_range) == 2:
+        # start and end
+        during = SubElement(temporal_filter, 'fes:During')
+        SubElement(during, 'fes:ValueReference').text = 'phenomenonTime'
+        time_period = SubElement(during, 'gml:TimePeriod', {'gml:id' : 't1'})
+        SubElement(time_period, 'gml:beginPosition').text = time_range[0].strftime(ISO8601_JST)
+        SubElement(time_period, 'gml:endPosition').text = time_range[1].strftime(ISO8601_JST)
+    else:
+        equals = SubElement(temporal_filter, 'fes:TEquals')
+        SubElement(equals, 'fes:ValueReference').text = 'phenomenonTime'
+        time_instant = SubElement(equals, 'gml:TimeInstant', {'gml:id' : 't1'})
+        if len(time_range) == 1:
+            SubElement(time_instant, 'gml:timePosition').text = time_range[0].strftime(ISO8601_JST)
+        else:
+            SubElement(time_instant, 'gml:timePosition').text = 'last'
+
     return root
 
 
