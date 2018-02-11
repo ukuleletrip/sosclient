@@ -379,7 +379,9 @@ def call_ogc_api(url, req_body, token=None, token_param=None):
     except HTTPError as e:
         print(e.code, e.reason)
         print(e.read())
-        return None, None
+        raise
+        return '<HTTPError><Code>{}</Code><Reason>{}</Reason></HTTPError>' \
+            .format(e.code, e.reason), None
         
     resp_body = resp.read()
 
