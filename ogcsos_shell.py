@@ -63,7 +63,7 @@ def list_nodes(args, sosserver):
         return 
     for i, node in enumerate(sosserver.observations):
         if opts.l:
-            print('%2d: %s : %s' % (i+1, node.name, node.description))
+            print('%2d: %s (%s) : %s' % (i+1, node.name, node.procedure, node.description))
         else:
             print('%2d: %s' % (i+1, node.name))
 
