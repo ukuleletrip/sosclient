@@ -126,13 +126,27 @@ def list_sensors(args, sosserver):
     except:
         return
     
-    print(opts.sensor)
     the_node = get_node_from_name_or_number(opts.sensor, sosserver.observations)
     if the_node:
         for i, prop in enumerate(the_node.properties):
             print('%2d: %s' % (i+1, prop))
     else:
         print('No node was found !!')
+
+def inspect_node(args, sosserver):
+    parser = AP(prog='inspect-node')
+    parser.add_argument('node', help='number or name of node')
+    try:
+        opts = parser.parse_args(args)
+    except:
+        return
+    
+    the_node = get_node_from_name_or_number(opts.node, sosserver.observations)
+    if the_node:
+        sosserver.describe_sensor(the_node)
+    else:
+        print('No node was found !!')
+
 
 def parse_cmd_datetime(dtstr):
     tries = [
@@ -288,6 +302,8 @@ def exec_command(cmd, sosserver):
         get_measurements(args[1:], sosserver)
     elif args[0] == 'put-measurements' or args[0] == 'put-measures':
         put_measurements(args[1:], sosserver)
+    elif args[0] == 'inspect-node':
+        inspect_node(args[1:], sosserver)
     else:
         print_help()
     return True

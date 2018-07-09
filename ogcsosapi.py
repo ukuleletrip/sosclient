@@ -347,6 +347,15 @@ def build_insert_observation_request(procedure, measurements, namespaces):
     
     return root
 
+def build_describe_sensor_request(procedure, namespaces):
+    attrib = copy.deepcopy(namespaces)
+    attrib['service'] = 'SOS'
+    attrib['version'] = '2.0.0'
+    root = Element('swes:DescribeSensor', attrib)
+    SubElement(root, 'procedure').text = procedure
+    SubElement(root, 'procedureDescriptionFormat').text = 'http://www.opengis.net/sensorml/1.0.1'
+    return root
+
 
 def call_ogc_api(url, req_body, token=None, token_param=None):
     """call ogc API
@@ -501,6 +510,7 @@ def get_result(url, procedure, properties, time_range):
     results = resp_root.find(get_cn_tag('sos:resultValues',
                                         namespaces)).text.strip().split('\n')
 
+
     measurements = {}
     prop_idx = 0
     prev_dt = None
@@ -510,7 +520,7 @@ def get_result(url, procedure, properties, time_range):
             dt = parse_iso8601_datetime(elem[0])
             value = {'value' : float(elem[1]), 'uom' : ''}
 
-            if prev_dt and dt < prev_dt:
+            if prev_dt and dt <= prev_dt:
                 # next prop
                 prop_idx += 1
 
@@ -538,6 +548,11 @@ def insert_observation(url, procedure, measurements):
     else:
         result = resp_root.find(get_cn_tag('sos:observation', namespaces)).text
     return result
+
+def describe_sensor(url, procedure):
+    req = build_describe_sensor_request(procedure, default_ogc_namespaces())
+    (resp_root, namespaces) = call_ogc_api(url, tostring(req, 'utf-8'))
+    return None
 
 
 class SOSServer(object):
@@ -643,6 +658,8 @@ class SOSServer(object):
                                   self._get_procedure(offering),
                                   measurements)
 
+    def describe_sensor(self, offering):
+        return describe_sensor(self._get_api_url(), self._get_procedure(offering))
 
     def update_capabilities(self):
         """execute GetCapabilities operation and holds its result in the instance.
