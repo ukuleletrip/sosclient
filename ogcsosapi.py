@@ -467,6 +467,11 @@ def get_observation(url, procedure, properties, time_range):
     req = build_get_observation_request(procedure, properties, time_range,
                                         default_ogc_namespaces())
     (resp_root, namespaces) = call_ogc_api(url, tostring(req, 'utf-8'))
+    exception = resp_root.find(get_cn_tag(':Exception', namespaces))
+    if exception is not None:
+        print('Exception: {}'.format(exception.attrib['exceptionCode']))
+        return {}
+
     observations = resp_root.findall(get_cn_tag('sos:observationData/om:OM_Observation',
                                                 namespaces))
     measurements = {}
@@ -507,9 +512,13 @@ def get_result(url, procedure, properties, time_range):
     req = build_get_result_request(procedure, properties, time_range,
                                    default_ogc_namespaces())
     (resp_root, namespaces) = call_ogc_api(url, tostring(req, 'utf-8'))
+    exception = resp_root.find(get_cn_tag(':Exception', namespaces))
+    if exception is not None:
+        print('Exception: {}'.format(exception.attrib['exceptionCode']))
+        return {}
+
     results = resp_root.find(get_cn_tag('sos:resultValues',
                                         namespaces)).text.strip().split('\n')
-
 
     measurements = {}
     prop_idx = 0
