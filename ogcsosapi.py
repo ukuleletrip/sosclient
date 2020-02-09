@@ -145,10 +145,26 @@ class Measurement(object):
         self.__dict__.update(kwds)
 
 
+def parse_observed_area(observed_area, namespaces):
+    envelope = observed_area.find(get_cn_tag('gml:Envelope', namespaces))
+    lc = envelope.find(get_cn_tag('gml:lowerCorner', namespaces))
+    uc = envelope.find(get_cn_tag('gml:upperCorner', namespaces))
+    return (lc.text, uc.text) if (lc is not None and uc is not None) else ('', '')
+
+
+def parse_phenomenon_time(phenomenon_time, namespaces):
+    tp = phenomenon_time.find(get_cn_tag('gml:TimePeriod', namespaces))
+    begin = tp.find(get_cn_tag('gml:beginPosition', namespaces))
+    end = tp.find(get_cn_tag('gml:endPosition', namespaces))
+    return (begin.text, end.text) if (begin is not None and end is not None) else ('', '')
+
+
 def parse_offering(offering, namespaces):
     observation_offering = offering.find(get_cn_tag('sos:ObservationOffering', namespaces))
     observation = Observation()
     observation.properties = []
+    observation.location = ('', '')
+    observation.time_range = ('', '')
     for child in observation_offering:
         if child.tag.endswith('}description'):
             observation.description = child.text
@@ -158,6 +174,10 @@ def parse_offering(offering, namespaces):
             observation.procedure = child.text
         elif child.tag.endswith('}observableProperty'):
             observation.properties.append(child.text)
+        elif child.tag.endswith('}observedArea'):
+            observation.location = parse_observed_area(child, namespaces)
+        elif child.tag.endswith('}phenomenonTime'):
+            observation.time_range = parse_phenomenon_time(child, namespaces)
     return observation
 
 

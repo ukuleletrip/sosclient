@@ -64,6 +64,8 @@ def list_nodes(args, sosserver):
     for i, node in enumerate(sosserver.observations):
         if opts.l:
             print('%2d: %s (%s) : %s' % (i+1, node.name, node.procedure, node.description))
+            print('    location  : %s %s' % (node.location[0], node.location[1]))
+            print('    time range: %s %s' % (node.time_range[0], node.time_range[1]))
         else:
             print('%2d: %s' % (i+1, node.name))
 
