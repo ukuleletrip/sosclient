@@ -377,7 +377,7 @@ def build_describe_sensor_request(procedure, namespaces):
     return root
 
 
-def call_ogc_api(url, req_body, token=None, token_param=None):
+def call_ogc_api(url, req_body, token=None, token_param=None, verbose=False):
     """call ogc API
 
     Args:
@@ -389,7 +389,7 @@ def call_ogc_api(url, req_body, token=None, token_param=None):
                        2nd returned dict is namespace dictionary from response.
 
     """
-    if debug:
+    if debug or verbose:
         print(req_body)
 
     if type(req_body) == bytes:
@@ -414,7 +414,7 @@ def call_ogc_api(url, req_body, token=None, token_param=None):
         
     resp_body = resp.read()
 
-    if debug:
+    if debug or verbose:
         print(resp_body)
 
     try:
@@ -580,7 +580,7 @@ def insert_observation(url, procedure, measurements):
 
 def describe_sensor(url, procedure):
     req = build_describe_sensor_request(procedure, default_ogc_namespaces())
-    (resp_root, namespaces) = call_ogc_api(url, tostring(req, 'utf-8'))
+    (resp_root, namespaces) = call_ogc_api(url, tostring(req, 'utf-8'), verbose=True)
     return None
 
 

@@ -51,6 +51,7 @@ def print_help():
                                    : put measurement to a sensor of a node
     server                         : show server info
     provider                       : show provider info
+    inspect-node                   : execute describe sensor (for test purpose)
     help                           : print this help
 ''')
 
